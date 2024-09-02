@@ -1,4 +1,7 @@
-HELP.md
+
+mysql_config.sh
+application-db-mysql.properties
+
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
