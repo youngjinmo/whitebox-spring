@@ -29,8 +29,11 @@ public class UserController {
 
     @ResponseBody
     @PostMapping("/create")
-    public UserResponseDto SignUp(@RequestParam String username, @RequestParam String password) {
-        return userService.createUserByUsername(new UserSignUpDto(username, password));
+    public UserResponseDto SignUp(HttpServletRequest request, @RequestParam String username, @RequestParam String password) {
+        String ip = request.getRemoteAddr();
+        String userAgent = request.getHeader("User-Agent");
+
+        return userService.createUserByUsername(new UserSignUpDto(username, password, ip, userAgent));
     }
 
     @PostMapping("/login")
@@ -46,7 +49,10 @@ public class UserController {
 
     @DeleteMapping("/logout/{id}")
     public void logout(HttpServletRequest request, @PathVariable("id") Long id) {
-        userService.logout(new UserLogOutDto(id));
+        String ip = request.getRemoteAddr();
+        String userAgent = request.getHeader("User-Agent");
+
+        userService.logout(new UserLogOutDto(id, ip, userAgent));
         sessionService.removeSessionById(request, id);
     }
 
@@ -60,26 +66,26 @@ public class UserController {
        return userService.findById(id);
     }
 
-    @GetMapping("/")
+    @GetMapping("/find")
     public UserResponseDto findUserByUsername(@RequestParam String username) {
         return userService.findByUsername(username);
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/{id}/username")
     public UserResponseDto UpdateUsername(HttpServletRequest request, @PathVariable("id") Long id, @RequestParam String username) {
-        validateSession(request, String.format("id=%s failed to update username by invalid session", id));
+        validateSession(request);
         return userService.updateUsernameById(id, username);
     }
 
-    @PatchMapping("/password/{id}")
+    @PatchMapping("/{id}/password")
     public UserResponseDto UpdatePassword(HttpServletRequest request, @PathVariable("id") Long id, @RequestParam String password) {
-        validateSession(request, String.format("id=%s failed to update password by invalid session", id));
+        validateSession(request);
         return userService.updatePasswordById(id, password);
     }
 
     @DeleteMapping("/{id}")
-    public void delete(HttpServletRequest request, @PathVariable("id") Long id) {
-        validateSession(request, String.format("id=%s failed to delete by invalid session", id));
+    public void deleteUser(HttpServletRequest request, @PathVariable("id") Long id) {
+        validateSession(request);
 
         String ip = request.getRemoteAddr();
         String userAgent = request.getHeader("User-Agent");
@@ -88,11 +94,12 @@ public class UserController {
         userService.deleteById(new UserDeleteDto(id, ip, userAgent));
     }
 
-    private void validateSession(HttpServletRequest request, String message) {
+    private void validateSession(HttpServletRequest request) {
         if (Objects.isNull(sessionService.getSession(request))) {
             String ip = request.getRemoteAddr();
             String userAgent = request.getHeader("User-Agent");
-            logger.debug("invalidate session, message={}, ip={}, user-agent={}", message, ip,userAgent);
+
+            log.debug("invalidate session, ip={}, user-agent={}", ip,userAgent);
             throw new IllegalStateException("INVALIDATE SESSION");
         }
     }
