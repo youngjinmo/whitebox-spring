@@ -28,19 +28,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 public class UserServiceImpl implements UserService {
     @Autowired private final PasswordEncoder passwordEncoder;
     @Autowired private final UserLogService userLogService;
     @Autowired private final UserRepository userRepository;
-    private final Logger logger;
 
     public UserServiceImpl(PasswordEncoder passwordEncoder, UserLogService userLogService, UserRepository userRepository) {
         this.passwordEncoder = passwordEncoder;
         this.userLogService = userLogService;
         this.userRepository = userRepository;
-        this.logger = LoggerFactory.getLogger(UserServiceImpl.class);
     }
 
     @Override
@@ -91,7 +90,7 @@ public class UserServiceImpl implements UserService {
 
                 return userResponseDto;
             }
-            logger.debug("user failed to login by invalid password, id={}", user.getId());
+            log.debug("user failed to login by invalid password, id={}", user.getId());
             throw new UnauthorizedException("INVALID_PASSWORD");
         }
 
@@ -139,7 +138,7 @@ public class UserServiceImpl implements UserService {
             User user = optionalUser.get();
             return new UserResponseDto(user);
         }
-        logger.debug("user failed to login by invalid username={}", username);
+        log.debug("user failed to login by invalid username={}", username);
         throw new NotFoundException("USER NOT FOUND BY USERNAME");
     }
 
@@ -168,7 +167,7 @@ public class UserServiceImpl implements UserService {
 
             return userResponseDto;
         }
-        logger.debug("failed to update username by invalid id={}, username={}", id, username);
+        log.debug("failed to update username by invalid id={}, username={}", id, username);
         throw new BadRequestException("FAILED TO UPDATE USERNAME BY INVALID ID");
     }
 
@@ -187,7 +186,7 @@ public class UserServiceImpl implements UserService {
 
             return userResponseDto;
         }
-        logger.debug("failed to update password by invalid id={}", id);
+        log.debug("failed to update password by invalid id={}", id);
         throw new BadRequestException("FAILED TO UPDATE PASSWORD BY INVALID ID");
     }
 
@@ -212,7 +211,7 @@ public class UserServiceImpl implements UserService {
 
             return userResponseDto;
         }
-        logger.debug("failed to update state by invalid id={}", id);
+        log.debug("failed to update state by invalid id={}", id);
         throw new BadRequestException("FAILED TO UPDATE STATE BY INVALID ID");
     }
 

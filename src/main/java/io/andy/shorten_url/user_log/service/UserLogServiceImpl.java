@@ -8,8 +8,7 @@ import io.andy.shorten_url.user_log.dto.UpdatePrivacyInfoDto;
 import io.andy.shorten_url.user_log.entity.UserLog;
 import io.andy.shorten_url.user_log.repository.UserLogRepository;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -18,16 +17,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @Transactional
 public class UserLogServiceImpl implements UserLogService {
 
     @Autowired private final UserLogRepository userLogRepository;
-    private final Logger logger;
 
     public UserLogServiceImpl(UserLogRepository userLogRepository) {
         this.userLogRepository = userLogRepository;
-        this.logger = LoggerFactory.getLogger(UserLogServiceImpl.class);
     }
 
     @Override

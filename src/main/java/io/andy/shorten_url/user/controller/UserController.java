@@ -6,8 +6,7 @@ import io.andy.shorten_url.user.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -15,12 +14,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @RequestMapping("/user")
 @RestController
 public class UserController {
     @Autowired private final UserService userService;
     @Autowired private final SessionService sessionService;
-    private final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     public UserController(UserService userService, SessionService sessionService) {
         this.userService = userService;
@@ -89,7 +88,7 @@ public class UserController {
 
         String ip = request.getRemoteAddr();
         String userAgent = request.getHeader("User-Agent");
-        logger.info("user try to delete id={}, ip={}, user-agent={}", id,ip,userAgent);
+        log.info("user try to delete id={}, ip={}, user-agent={}", id,ip,userAgent);
 
         userService.deleteById(new UserDeleteDto(id, ip, userAgent));
     }
