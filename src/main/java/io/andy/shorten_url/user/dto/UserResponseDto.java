@@ -4,33 +4,30 @@ import io.andy.shorten_url.user.constant.UserRole;
 import io.andy.shorten_url.user.constant.UserState;
 import io.andy.shorten_url.user.entity.User;
 
-import lombok.Getter;
-import lombok.ToString;
-
 import java.time.LocalDateTime;
 
-@Getter
-@ToString
-public class UserResponseDto {
-    private final Long id;
-    private final String username;
-    private final UserState state;
-    private final UserRole role;
-    private final LocalDateTime createdAt;
-    private final LocalDateTime updatedAt;
-    private final LocalDateTime lastLoginAt;
-    private final LocalDateTime withdrawnAt;
-    private final LocalDateTime deletedAt;
-
+public record UserResponseDto(
+        Long id,
+        String username,
+        UserState state,
+        UserRole role,
+        LocalDateTime createdAt,
+        LocalDateTime updateAt,
+        LocalDateTime lastLoginAt,
+        LocalDateTime withdrawnAt,
+        LocalDateTime deletedAt
+) {
     public UserResponseDto(User user) {
-        id = user.getId();
-        username = user.getUsername();
-        state = user.getState();
-        role = user.getRole();
-        createdAt = user.getCreatedAt();
-        updatedAt = user.getUpdatedAt();
-        lastLoginAt = user.getLastLoginAt();
-        withdrawnAt = user.getWithdrawnAt();
-        deletedAt = user.getDeletedAt();
+        this(
+                user.getId(),
+                user.getUsername(),
+                user.getState(),
+                user.getRole(),
+                user.getCreatedAt(),
+                user.getUpdatedAt(),
+                user.getLastLoginAt(),
+                user.getWithdrawnAt(),
+                user.getDeletedAt()
+        );
     }
 }

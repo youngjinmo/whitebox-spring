@@ -44,8 +44,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDto createUserByUsername(UserSignUpDto userDto) {
-        if (isDuplicateUsername(userDto.getUsername())) {
-            log.debug("this username is already exists = {}", userDto.getUsername());
+        if (isDuplicateUsername(userDto.username())) {
+            log.debug("this username is already exists = {}", userDto.username());
             throw new IllegalStateException("DUPLICATE USERNAME");
         }
 
@@ -62,8 +62,8 @@ public class UserServiceImpl implements UserService {
             putAccessLog(
                     userResponseDto,
                     UserLogMessage.SIGNUP,
-                    userDto.getIp(),
-                    userDto.getUserAgent()
+                    userDto.ipAddress(),
+                    userDto.userAgent()
             );
 
             return userResponseDto;
@@ -75,18 +75,18 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDto login(UserLoginDto userDto) {
-        Optional<User> optionalUser = userRepository.findByUsername(userDto.getUsername());
+        Optional<User> optionalUser = userRepository.findByUsername(userDto.username());
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
-            if (passwordEncoder.matches(userDto.getPassword(), user.getPassword())) {
+            if (passwordEncoder.matches(userDto.password(), user.getPassword())) {
 
                 user.setState(UserState.NORMAL);
                 user.setLastLoginAt(LocalDateTime.now());
 
                 UserResponseDto userResponseDto = new UserResponseDto(user);
 
-                log.info("user logined={}", userResponseDto.getId());
-                putAccessLog(userResponseDto, UserLogMessage.LOGIN, userDto.getIp(), userDto.getUserAgent());
+                log.info("user logined={}", userResponseDto.id());
+                putAccessLog(userResponseDto, UserLogMessage.LOGIN, userDto.ipAddress(), userDto.userAgent());
 
                 return userResponseDto;
             }
@@ -94,19 +94,19 @@ public class UserServiceImpl implements UserService {
             throw new UnauthorizedException("INVALID_PASSWORD");
         }
 
-        log.debug("failed to login by invalid username: {}", userDto.getUsername());
+        log.debug("failed to login by invalid username: {}", userDto.username());
         throw new UnauthorizedException("INVALID_USERNAME");
     }
 
     @Override
     public void logout(UserLogOutDto userDto) {
-        UserResponseDto userResponseDto = this.findById(userDto.getId());
-        log.info("user logout, id={}", userResponseDto.getId());
+        UserResponseDto userResponseDto = this.findById(userDto.id());
+        log.info("user logout, id={}", userResponseDto.id());
         this.putAccessLog(
                 userResponseDto,
                 UserLogMessage.LOGOUT,
-                userDto.getClientIp(),
-                userDto.getUserAgent()
+                userDto.ipAddress(),
+                userDto.userAgent()
         );
     }
 
@@ -217,13 +217,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteById(UserDeleteDto userDto) {
-        Optional<User> originUser = userRepository.findById(userDto.getId());
+        Optional<User> originUser = userRepository.findById(userDto.id());
         if (originUser.isPresent()) {
             try {
-                userRepository.deleteById(userDto.getId());
+                userRepository.deleteById(userDto.id());
             } catch (Exception e) {
 
-                log.error("failed to delete user by id={}. error message={}", userDto.getId(), e.getMessage());
+                log.error("failed to delete user by id={}. error message={}", userDto.id(), e.getMessage());
                 throw new InternalServerException("FAILED TO DELETE USER BY ID");
             }
 
@@ -232,9 +232,9 @@ public class UserServiceImpl implements UserService {
                 user.setDeletedAt(LocalDateTime.now());
                 encryptUser(user);
 
-                log.info("user deleted. id={}, ip={}, user-agent={}", userDto.getId(), userDto.getClientIp(), userDto.getUserAgent());
+                log.info("user deleted. id={}, ip={}, user-agent={}", userDto.id(), userDto.ipAddress(), userDto.userAgent());
                 UserResponseDto userResponseDto = new UserResponseDto(user);
-                putAccessLog(userResponseDto, UserLogMessage.DELETE_USER, userDto.getClientIp(), userDto.getUserAgent());
+                putAccessLog(userResponseDto, UserLogMessage.DELETE_USER, userDto.ipAddress(), userDto.userAgent());
         }
     }
 

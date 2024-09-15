@@ -44,32 +44,32 @@ public class UserLog {
 
     // 사용자 접속 정보(SIGNUP/LOGIN/LOGOUT/DELETE)를 저장하는 UserLog 생성자
     public UserLog(AccessInfoDto userLogDto) {
-        this.userId = userLogDto.getUserId();
-        this.state = userLogDto.getState();
-        this.role = userLogDto.getRole();
-        this.message = userLogDto.getMessage();
-        this.ipAddress = userLogDto.getIpAddress();
-        this.userAgent = userLogDto.getUserAgent();
+        this.userId = userLogDto.userId();
+        this.state = userLogDto.state();
+        this.role = userLogDto.role();
+        this.message = userLogDto.message();
+        this.ipAddress = userLogDto.ipAddress();
+        this.userAgent = userLogDto.userAgent();
         this.createdAt = LocalDateTime.now();
     }
 
     // 사용자 변경 정보(UPDATE)를 저장하는 UserLog 생성자
     public UserLog(UpdateInfoDto userLogDto) {
-        this.userId = userLogDto.getUserId();
-        this.state = userLogDto.getState();
-        this.role = userLogDto.getRole();
-        this.message = userLogDto.getMessage();
-        this.preValue = userLogDto.getPreValue();
-        this.postValue = userLogDto.getPostValue();
+        this.userId = userLogDto.userId();
+        this.state = userLogDto.state();
+        this.role = userLogDto.role();
+        this.message = userLogDto.message();
+        this.preValue = userLogDto.preValue();
+        this.postValue = userLogDto.postValue();
         this.createdAt = LocalDateTime.now();
     }
 
     // 민감 정보 변경시 저장하는 UserLog 생성자
     public UserLog(UpdatePrivacyInfoDto userLogDto) {
-        this.userId = userLogDto.getUserId();
-        this.state = userLogDto.getState();
-        this.role = userLogDto.getRole();
-        this.message = userLogDto.getMessage();
+        this.userId = userLogDto.userId();
+        this.state = userLogDto.state();
+        this.role = userLogDto.role();
+        this.message = userLogDto.message();
         this.createdAt = LocalDateTime.now();
     }
 }

@@ -1,9 +1,10 @@
 package io.andy.shorten_url.util.ip;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.web.reactive.function.client.WebClient;
-
 import io.andy.shorten_url.exception.server.InternalServerException;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.springframework.web.reactive.function.client.WebClient;
 
 public class IpLocationUtils {
     private final WebClient webClient;
