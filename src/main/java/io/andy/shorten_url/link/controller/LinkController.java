@@ -4,6 +4,7 @@ import io.andy.shorten_url.link.dto.CreateLinkDto;
 import io.andy.shorten_url.link.entity.Link;
 import io.andy.shorten_url.link.service.LinkService;
 
+import io.andy.shorten_url.link_counter.service.LinkCounterService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -18,9 +19,11 @@ import java.util.List;
 @RestController
 public class LinkController {
     @Autowired private final LinkService linkService;
+    @Autowired private final LinkCounterService linkCounterService;
 
-    public LinkController(LinkService linkService) {
+    public LinkController(LinkService linkService, LinkCounterService linkCounterService) {
         this.linkService = linkService;
+        this.linkCounterService = linkCounterService;
     }
 
     @PostMapping("/link/create")
@@ -35,7 +38,7 @@ public class LinkController {
         return linkService.findAllLinks();
     }
 
-    @GetMapping("/{urlPath}")
+    @GetMapping(value = {"/{urlPath}", "/{urlPath}/"})
     public void redirectUrl(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -43,12 +46,7 @@ public class LinkController {
     ) throws IOException {
         Link link = linkService.findLinkByUrlPath(urlPath);
         linkService.increaseLinkCount(link.getId());
-        log.info("access link, ur path={}, redirectionUrl={}, ip={}, userAgent={}",
-                link.getUrlPath(),
-                link.getRedirectionUrl(),
-                request.getRemoteAddr(),
-                request.getHeader("User-Agent")
-        );
+        linkCounterService.putAccessCount(request, link.getId());
         response.sendRedirect(link.getRedirectionUrl());
     }
 
