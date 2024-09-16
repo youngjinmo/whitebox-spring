@@ -26,9 +26,8 @@ public class UserController {
         this.sessionService = sessionService;
     }
 
-    @ResponseBody
     @PostMapping("/create")
-    public UserResponseDto SignUp(HttpServletRequest request, @RequestParam String username, @RequestParam String password) {
+    public UserResponseDto signUp(HttpServletRequest request, @RequestParam String username, @RequestParam String password) {
         String clientIp = request.getRemoteAddr();
         String userAgent = request.getHeader("User-Agent");
 
@@ -36,12 +35,12 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public UserResponseDto Login(HttpServletRequest request, @RequestParam String username, @RequestParam String password) {
+    public UserResponseDto login(HttpServletRequest request, @RequestParam String username, @RequestParam String password) {
         String clientIp = request.getRemoteAddr();
         String userAgent = request.getHeader("User-Agent");
 
         UserResponseDto user = userService.login(new UserLoginDto(username, password, clientIp, userAgent));
-        sessionService.setSessionById(request, user.id());
+        sessionService.setAttribute(request, user.id());
 
         return user;
     }
@@ -52,7 +51,7 @@ public class UserController {
         String userAgent = request.getHeader("User-Agent");
 
         userService.logout(new UserLogOutDto(id, clientIp, userAgent));
-        sessionService.removeSessionById(request, id);
+        sessionService.invalidateSession(request, id);
     }
 
     @GetMapping("/all")
@@ -94,7 +93,7 @@ public class UserController {
     }
 
     private void validateSession(HttpServletRequest request) {
-        if (Objects.isNull(sessionService.getSession(request))) {
+        if (Objects.isNull(sessionService.getAttribute(request))) {
             String clientIp = request.getRemoteAddr();
             String userAgent = request.getHeader("User-Agent");
 
