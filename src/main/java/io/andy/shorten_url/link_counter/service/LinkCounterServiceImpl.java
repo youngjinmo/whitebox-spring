@@ -1,12 +1,10 @@
 package io.andy.shorten_url.link_counter.service;
 
+import io.andy.shorten_url.link_counter.dto.PutAccessLogDto;
 import io.andy.shorten_url.link_counter.repository.LinkCounterRepository;
 import io.andy.shorten_url.link_counter.entity.LinkCounter;
-import io.andy.shorten_url.util.ClientMapper;
 import io.andy.shorten_url.util.ip.IpApiResponse;
 import io.andy.shorten_url.util.ip.IpLocationUtils;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -29,24 +28,13 @@ public class LinkCounterServiceImpl implements LinkCounterService {
     }
 
     @Override
-    public void putAccessCount(HttpServletRequest request, Long linkId) {
-        String ipAddress = ClientMapper.parseClientIp(request);
-        String userAgent = ClientMapper.parseUserAgent(request);
-        String referer = request.getHeader("Referer");
+    public void putAccessCount(PutAccessLogDto accessLogDto, Long linkId) {
         try {
-            IpApiResponse externalApiResponse = ipLocationUtils.getLocationByIp(ipAddress);
-            String location = externalApiResponse.country();
-            if (externalApiResponse.country() == null) {
-                location = request.getLocale().getCountry();
+            IpApiResponse externalApiResponse = ipLocationUtils.getLocationByIp(accessLogDto.getIpAddress());
+            if (externalApiResponse.country() != null) {
+                accessLogDto.setLocation(externalApiResponse.country());
             }
-            repository.save(new LinkCounter(
-                    linkId,
-                    LocalDateTime.now(),
-                    ipAddress,
-                    userAgent,
-                    location,
-                    referer
-            ));
+            repository.save(new LinkCounter(linkId, accessLogDto));
         } catch (Exception e) {
             log.error("failed to get location by ip, message={}", e.getMessage());
         }
@@ -59,6 +47,24 @@ public class LinkCounterServiceImpl implements LinkCounterService {
 
     @Override
     public List<LinkCounter> findAccessCountsByLinkId(Long linkId) {
-        return repository.findLinkCounterByLinkId(linkId);
+        return repository.findByLinkId(linkId);
+    }
+
+    @Override
+    public List<LinkCounter> findLatestLinkCountsWithinNdays(Long linkId, int days) {
+        List<LinkCounter> linkCounters = this.findAccessCountsByLinkId(linkId);
+        return linkCounters
+                .stream()
+                .filter(linkCounter -> linkCounter
+                        .getCreatedAt()
+                        .isAfter(LocalDateTime.now().minusDays(days)))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteAccessCountByLinkId(Long linkId) {
+        int counts = this.findAccessCountsByLinkId(linkId).size();
+        repository.deleteByLinkId(linkId);
+        log.info("deleted access counts={} by linkId={}", counts, linkId);
     }
 }

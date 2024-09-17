@@ -1,8 +1,11 @@
 package io.andy.shorten_url.link_counter.entity;
 
+import io.andy.shorten_url.link_counter.dto.PutAccessLogDto;
+
 import jakarta.persistence.*;
 
 import lombok.Getter;
+import org.springframework.context.annotation.Profile;
 
 import java.time.LocalDateTime;
 
@@ -11,7 +14,7 @@ import java.time.LocalDateTime;
 public class LinkCounter {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private LocalDateTime accessDate;
+    private LocalDateTime createdAt;
     private Long linkId;
     private String ipAddress;
     private String userAgent;
@@ -20,19 +23,17 @@ public class LinkCounter {
 
     public LinkCounter() {}
 
-    public LinkCounter(
-            Long linkId,
-            LocalDateTime accessDate,
-            String ipAddress,
-            String userAgent,
-            String location,
-            String referer
-    ) {
+    public LinkCounter(Long linkId, PutAccessLogDto accessLogDto) {
         this.linkId = linkId;
-        this.accessDate = accessDate;
-        this.ipAddress = ipAddress;
-        this.userAgent = userAgent;
-        this.location = location;
-        this.referer = referer;
+        this.createdAt = LocalDateTime.now();
+        this.ipAddress = accessLogDto.getIpAddress();
+        this.userAgent = accessLogDto.getUserAgent();
+        this.location = accessLogDto.getLocation();
+        this.referer = accessLogDto.getReferer();
+    }
+
+    @Profile("test")
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }
