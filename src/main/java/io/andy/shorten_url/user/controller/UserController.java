@@ -4,6 +4,7 @@ import io.andy.shorten_url.session.SessionService;
 import io.andy.shorten_url.user.dto.*;
 import io.andy.shorten_url.user.service.UserService;
 
+import io.andy.shorten_url.util.ClientMapper;
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
@@ -28,16 +29,16 @@ public class UserController {
 
     @PostMapping("/create")
     public UserResponseDto signUp(HttpServletRequest request, @RequestParam String username, @RequestParam String password) {
-        String clientIp = request.getRemoteAddr();
-        String userAgent = request.getHeader("User-Agent");
+        String clientIp = ClientMapper.parseClientIp(request);
+        String userAgent = ClientMapper.parseUserAgent(request);
 
         return userService.createUserByUsername(new UserSignUpDto(username, password, clientIp, userAgent));
     }
 
     @PostMapping("/login")
     public UserResponseDto login(HttpServletRequest request, @RequestParam String username, @RequestParam String password) {
-        String clientIp = request.getRemoteAddr();
-        String userAgent = request.getHeader("User-Agent");
+        String clientIp = ClientMapper.parseClientIp(request);
+        String userAgent = ClientMapper.parseUserAgent(request);
 
         UserResponseDto user = userService.login(new UserLoginDto(username, password, clientIp, userAgent));
         sessionService.setAttribute(request, user.id());
@@ -47,8 +48,8 @@ public class UserController {
 
     @DeleteMapping("/logout/{id}")
     public void logout(HttpServletRequest request, @PathVariable("id") Long id) {
-        String clientIp = request.getRemoteAddr();
-        String userAgent = request.getHeader("User-Agent");
+        String clientIp = ClientMapper.parseClientIp(request);
+        String userAgent = ClientMapper.parseUserAgent(request);
 
         userService.logout(new UserLogOutDto(id, clientIp, userAgent));
         sessionService.invalidateSession(request, id);
@@ -85,8 +86,8 @@ public class UserController {
     public void deleteUser(HttpServletRequest request, @PathVariable("id") Long id) {
         validateSession(request);
 
-        String clientIp = request.getRemoteAddr();
-        String userAgent = request.getHeader("User-Agent");
+        String clientIp = ClientMapper.parseClientIp(request);
+        String userAgent = ClientMapper.parseUserAgent(request);
         log.info("user try to delete id={}, clientIp={}, user-agent={}", id, clientIp,userAgent);
 
         userService.deleteById(new UserDeleteDto(id, clientIp, userAgent));
@@ -94,8 +95,8 @@ public class UserController {
 
     private void validateSession(HttpServletRequest request) {
         if (Objects.isNull(sessionService.getAttribute(request))) {
-            String clientIp = request.getRemoteAddr();
-            String userAgent = request.getHeader("User-Agent");
+            String clientIp = ClientMapper.parseClientIp(request);
+            String userAgent = ClientMapper.parseUserAgent(request);
 
             log.debug("invalidate session, clientIp={}, user-agent={}", clientIp, userAgent);
             throw new IllegalStateException("INVALIDATE SESSION");
