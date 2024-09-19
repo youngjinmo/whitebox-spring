@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface UserService {
     UserResponseDto createUserByUsername(UserSignUpDto userDto);
-    UserResponseDto login(UserLoginDto userDto);
+    UserResponseDto login(UserLoginDto userDto, String userAgent);
     void logout(UserLogOutDto userDto);
     List<UserResponseDto> findAllUsers();
     UserResponseDto findById(Long id);
@@ -16,4 +16,5 @@ public interface UserService {
     UserResponseDto updatePasswordById(Long id, String password);
     UserResponseDto updateStateById(Long id, UserState state);
     void deleteById(UserDeleteDto dto);
+    boolean isDuplicateUsername(String username);
 }

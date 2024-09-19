@@ -28,19 +28,14 @@ public class UserController {
     }
 
     @PostMapping("/create")
-    public UserResponseDto signUp(HttpServletRequest request, @RequestParam String username, @RequestParam String password) {
-        String clientIp = ClientMapper.parseClientIp(request);
-        String userAgent = ClientMapper.parseUserAgent(request);
-
-        return userService.createUserByUsername(new UserSignUpDto(username, password, clientIp, userAgent));
+    public UserResponseDto signUp(@RequestBody UserSignUpDto userDto) {
+        return userService.createUserByUsername(userDto);
     }
 
     @PostMapping("/login")
-    public UserResponseDto login(HttpServletRequest request, @RequestParam String username, @RequestParam String password) {
-        String clientIp = ClientMapper.parseClientIp(request);
+    public UserResponseDto login(HttpServletRequest request, @RequestBody UserLoginDto userDto) {
         String userAgent = ClientMapper.parseUserAgent(request);
-
-        UserResponseDto user = userService.login(new UserLoginDto(username, password, clientIp, userAgent));
+        UserResponseDto user = userService.login(userDto, userAgent);
         sessionService.setAttribute(request, user.id());
 
         return user;
@@ -65,19 +60,19 @@ public class UserController {
        return userService.findById(id);
     }
 
-    @GetMapping("/find")
-    public UserResponseDto findUserByUsername(@RequestParam String username) {
-        return userService.findByUsername(username);
+    @GetMapping("/check-username-available")
+    public boolean findUserByUsername(@RequestParam String username) {
+        return userService.isDuplicateUsername(username);
     }
 
     @PatchMapping("/{id}/username")
-    public UserResponseDto UpdateUsername(HttpServletRequest request, @PathVariable("id") Long id, @RequestParam String username) {
+    public UserResponseDto UpdateUsername(HttpServletRequest request, @PathVariable("id") Long id, @RequestBody String username) {
         validateSession(request);
         return userService.updateUsernameById(id, username);
     }
 
     @PatchMapping("/{id}/password")
-    public UserResponseDto UpdatePassword(HttpServletRequest request, @PathVariable("id") Long id, @RequestParam String password) {
+    public UserResponseDto UpdatePassword(HttpServletRequest request, @PathVariable("id") Long id, @RequestBody String password) {
         validateSession(request);
         return userService.updatePasswordById(id, password);
     }

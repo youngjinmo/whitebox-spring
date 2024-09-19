@@ -46,7 +46,7 @@ public class UserServiceImpl implements UserService {
     public UserResponseDto createUserByUsername(UserSignUpDto userDto) {
         if (isDuplicateUsername(userDto.username())) {
             log.debug("this username is already exists = {}", userDto.username());
-            throw new IllegalStateException("DUPLICATE USERNAME");
+            throw new BadRequestException("DUPLICATE USERNAME");
         }
 
         try {
@@ -59,12 +59,7 @@ public class UserServiceImpl implements UserService {
 
             UserResponseDto userResponseDto = new UserResponseDto(user);
             log.debug("created user: {}", userResponseDto);
-            putAccessLog(
-                    userResponseDto,
-                    UserLogMessage.SIGNUP,
-                    userDto.ipAddress(),
-                    userDto.userAgent()
-            );
+            putInfoLog(userResponseDto, UserLogMessage.SIGNUP);
 
             return userResponseDto;
         } catch (Exception e) {
@@ -74,7 +69,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponseDto login(UserLoginDto userDto) {
+    public UserResponseDto login(UserLoginDto userDto, String userAgent) {
         Optional<User> optionalUser = userRepository.findByUsername(userDto.username());
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
@@ -86,7 +81,7 @@ public class UserServiceImpl implements UserService {
                 UserResponseDto userResponseDto = new UserResponseDto(user);
 
                 log.info("user logined={}", userResponseDto.id());
-                putAccessLog(userResponseDto, UserLogMessage.LOGIN, userDto.ipAddress(), userDto.userAgent());
+                putAccessLog(userResponseDto, UserLogMessage.LOGIN, userAgent);
 
                 return userResponseDto;
             }
@@ -105,7 +100,6 @@ public class UserServiceImpl implements UserService {
         this.putAccessLog(
                 userResponseDto,
                 UserLogMessage.LOGOUT,
-                userDto.ipAddress(),
                 userDto.userAgent()
         );
     }
@@ -234,13 +228,17 @@ public class UserServiceImpl implements UserService {
 
                 log.info("user deleted. id={}, ip={}, user-agent={}", userDto.id(), userDto.ipAddress(), userDto.userAgent());
                 UserResponseDto userResponseDto = new UserResponseDto(user);
-                putAccessLog(userResponseDto, UserLogMessage.DELETE_USER, userDto.ipAddress(), userDto.userAgent());
+                putAccessLog(userResponseDto, UserLogMessage.DELETE_USER, userDto.userAgent());
         }
     }
 
-    private boolean isDuplicateUsername(String username) {
+    @Override
+    public boolean isDuplicateUsername(String username) {
         Optional<User> user = userRepository.findByUsername(username);
-        return user.isPresent();
+        if (user.isPresent()) {
+            return true;
+        }
+        return false;
     }
 
     private void encryptUser(User user) {
@@ -251,10 +249,9 @@ public class UserServiceImpl implements UserService {
     private void putAccessLog(
             UserResponseDto userResponseDto,
             UserLogMessage logMessage,
-            String ip,
             String userAgent
     ) {
-        AccessInfoDto userLog = new AccessInfoDto(userResponseDto, logMessage, ip, userAgent);
+        AccessInfoDto userLog = new AccessInfoDto(userResponseDto, logMessage, userAgent);
         userLogService.putUserAccessLog(userLog);
     }
 

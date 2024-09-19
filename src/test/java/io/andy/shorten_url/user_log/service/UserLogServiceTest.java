@@ -61,17 +61,16 @@ class UserLogServiceTest {
 
     @Test
     void putUserAccessLog() {
-        String localhost = "127.0.0.1";
+        String userAgent = "Firefox";
         userLogService.putUserAccessLog(new AccessInfoDto(
                 new UserResponseDto(user),
                 UserLogMessage.SIGNUP,
-                localhost,
-                "firfox"
+                userAgent
         ));
 
         List<UserLog> result = userLogRepository.findByUserId(user.getId()).orElse(null);
         assertNotNull(result);
-        assertEquals(localhost, result.get(0).getIpAddress());
+        assertEquals(userAgent, result.get(0).getUserAgent());
     }
 
     @Test
@@ -79,13 +78,11 @@ class UserLogServiceTest {
         userLogService.putUserAccessLog(new AccessInfoDto(
                 new UserResponseDto(user),
                 UserLogMessage.LOGIN,
-                "127.0.0.1",
                 "firefox"
         ));
         userLogService.putUserAccessLog(new AccessInfoDto(
                 new UserResponseDto(user),
                 UserLogMessage.LOGOUT,
-                "127.0.0.1",
                 "firefox"
         ));
 
@@ -100,13 +97,11 @@ class UserLogServiceTest {
         userLogService.putUserAccessLog(new AccessInfoDto(
                 new UserResponseDto(user),
                 message,
-                "127.0.0.1",
                 "firefox"
         ));
         userLogService.putUserAccessLog(new AccessInfoDto(
                 new UserResponseDto(user),
                 message,
-                "128.2.2.2",
                 "chrome"
         ));
 
@@ -122,7 +117,6 @@ class UserLogServiceTest {
         userLogService.putUserAccessLog(new AccessInfoDto(
                 new UserResponseDto(user),
                 UserLogMessage.LOGIN,
-                "128.2.2.2",
                 "chrome"
         ));
         userLogService.putUpdateInfoLog(new UpdateInfoDto(
@@ -144,7 +138,6 @@ class UserLogServiceTest {
             userLogService.putUserAccessLog(new AccessInfoDto(
                     new UserResponseDto(user),
                     UserLogMessage.LOGIN,
-                    "127.0.0."+i,
                     "chrome+"+i
             ));
         }
