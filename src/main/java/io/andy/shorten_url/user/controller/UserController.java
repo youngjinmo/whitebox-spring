@@ -1,5 +1,6 @@
 package io.andy.shorten_url.user.controller;
 
+import io.andy.shorten_url.exception.client.ForbiddenException;
 import io.andy.shorten_url.exception.client.UnauthorizedException;
 import io.andy.shorten_url.exception.server.InternalServerException;
 import io.andy.shorten_url.session.SessionService;
@@ -10,7 +11,6 @@ import io.andy.shorten_url.util.mail.MailService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,11 +24,21 @@ import java.util.Objects;
 @Slf4j
 @RequestMapping("/user")
 @RestController
-@RequiredArgsConstructor
 public class UserController {
-    @Autowired private final UserService userService;
-    @Autowired private final SessionService sessionService;
-    @Autowired private final MailService mailService;
+    private final UserService userService;
+    private final SessionService sessionService;
+    private final MailService mailService;
+
+    @Autowired
+    public UserController(
+            UserService userService,
+            SessionService sessionService,
+            MailService mailService
+    ) {
+        this.userService = userService;
+        this.sessionService = sessionService;
+        this.mailService = mailService;
+    }
 
     @PostMapping("/create")
     public UserResponseDto signUp(@RequestBody UserSignUpDto userDto) {
@@ -36,32 +46,34 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public UserResponseDto login(HttpServletRequest request, @RequestBody UserLoginDto userDto) {
+    public void login(HttpServletRequest request, @RequestBody UserLoginDto userDto) {
         String userAgent = ClientMapper.parseUserAgent(request);
         UserResponseDto user = userService.login(userDto, userAgent);
         sessionService.setAuthSession(request, user.id());
-
-        return user;
     }
 
     @PostMapping("/send-email-auth")
-    public ResponseEntity<String> sendEmailAuth(HttpServletRequest request, @RequestParam String mailRecipient) {
+    public ResponseEntity<Void> sendEmailAuth(HttpServletRequest request, @RequestParam String recipient) {
+        if (userService.isDuplicateUsername(recipient)) {
+            log.debug("[FORBIDDEN] Already existing user tried to send email authentication = {}", recipient);
+            throw new ForbiddenException("EMAIL DUPLICATED");
+        }
         try {
-            String secretCode = mailService.sendMail(mailRecipient);
+            String secretCode = mailService.sendMail(recipient);
             sessionService.setMailAuthSession(request, secretCode);
-            return new ResponseEntity<>(secretCode, HttpStatus.OK);
+            return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
             e.printStackTrace();
-            log.error("failed to sent mail = {}, error message={}", mailRecipient, e.getMessage());
+            log.error("failed to sent mail = {}, error message={}", recipient, e.getMessage());
             throw new InternalServerException("FAILED TO SENT MAIL");
         }
     }
 
     @GetMapping("/verify-email-auth")
     public boolean verifyEmailAuth(HttpServletRequest request, @RequestParam String secretCode) {
-        Object authSession = sessionService.getAuthSession(request);
+        Object authSession = sessionService.getMailAuthSession(request);
         if (Objects.isNull(authSession)) return false;
-        return authSession == secretCode;
+        return authSession.equals(secretCode);
     }
 
     @DeleteMapping("/logout/{id}")
@@ -83,8 +95,8 @@ public class UserController {
        return userService.findById(id);
     }
 
-    @GetMapping("/check-username-available")
-    public boolean findUserByUsername(@RequestParam String username) {
+    @GetMapping("/verify-username-available")
+    public boolean verifyEmailDuplication(@RequestParam String username) {
         return userService.isDuplicateUsername(username);
     }
 
