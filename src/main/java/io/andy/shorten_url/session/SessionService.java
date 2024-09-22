@@ -29,12 +29,13 @@ public class SessionService {
         }
     }
 
-    public void setAuthSession(HttpServletRequest request, Long userId) {
+    public Object setAuthSession(HttpServletRequest request, Long userId) {
         try {
             HttpSession session = request.getSession();
 
             session.setAttribute(SESSION_KEY_LOGIN, userId);
             session.setMaxInactiveInterval(SESSION_ACTIVE_TIME);
+            return this.getAuthSession(request);
         } catch (Exception e) {
             log.error("failed to set session, id={}, error message={}", userId, e.getMessage());
             throw new IllegalStateException("FAILED TO SET SESSION");

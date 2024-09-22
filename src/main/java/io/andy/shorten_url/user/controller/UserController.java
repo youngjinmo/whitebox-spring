@@ -46,10 +46,10 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public void login(HttpServletRequest request, @RequestBody UserLoginDto userDto) {
+    public ResponseEntity<Object> login(HttpServletRequest request, @RequestBody UserLoginDto userDto) {
         String userAgent = ClientMapper.parseUserAgent(request);
         UserResponseDto user = userService.login(userDto, userAgent);
-        sessionService.setAuthSession(request, user.id());
+        return new ResponseEntity<>(sessionService.setAuthSession(request, user.id()), HttpStatus.OK);
     }
 
     @PostMapping("/send-email-auth")
