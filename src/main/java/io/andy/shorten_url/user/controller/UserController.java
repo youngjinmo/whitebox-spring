@@ -25,20 +25,9 @@ import java.util.Objects;
 @RequestMapping("/user")
 @RestController
 public class UserController {
-    private final UserService userService;
-    private final SessionService sessionService;
-    private final MailService mailService;
-
-    @Autowired
-    public UserController(
-            UserService userService,
-            SessionService sessionService,
-            MailService mailService
-    ) {
-        this.userService = userService;
-        this.sessionService = sessionService;
-        this.mailService = mailService;
-    }
+    @Autowired private UserService userService;
+    @Autowired private SessionService sessionService;
+    @Autowired private MailService mailService;
 
     @PostMapping("/create")
     public UserResponseDto signUp(@RequestBody UserSignUpDto userDto) {
@@ -74,6 +63,12 @@ public class UserController {
         Object authSession = sessionService.getMailAuthSession(request);
         if (Objects.isNull(authSession)) return false;
         return authSession.equals(secretCode);
+    }
+
+    @PostMapping
+    public ResponseEntity<Void> findPassword(@RequestParam String username) {
+        userService.createFindPasswordLink(username);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @DeleteMapping("/logout/{id}")

@@ -16,6 +16,11 @@ import io.andy.shorten_url.user_log.dto.UpdatePrivacyInfoDto;
 import io.andy.shorten_url.user_log.service.UserLogService;
 import io.andy.shorten_url.util.EncodeUtil;
 
+import io.andy.shorten_url.util.mail.MailService;
+import io.andy.shorten_url.util.random.RandomUtility;
+import io.andy.shorten_url.util.random.SecretCodeGenerator;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,15 +37,12 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class UserServiceImpl implements UserService {
-    @Autowired private final PasswordEncoder passwordEncoder;
-    @Autowired private final UserLogService userLogService;
-    @Autowired private final UserRepository userRepository;
-
-    public UserServiceImpl(PasswordEncoder passwordEncoder, UserLogService userLogService, UserRepository userRepository) {
-        this.passwordEncoder = passwordEncoder;
-        this.userLogService = userLogService;
-        this.userRepository = userRepository;
-    }
+    @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private UserLogService userLogService;
+    @Autowired private UserRepository userRepository;
+    private RandomUtility randomUtility = new SecretCodeGenerator();
+    @Autowired
+    private MailService mailService;
 
     @Override
     public UserResponseDto createUserByUsername(UserSignUpDto userDto) {
@@ -239,6 +241,24 @@ public class UserServiceImpl implements UserService {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void createFindPasswordLink(String username) {
+        // TODO create privacy url path
+        String secretCode = randomUtility.generate(20);
+
+        // TODO save it into session with ttl
+        // TODO send it into email
+        try {
+            String title = "[Shorten-url] 비밀번호 찾기 링크 전송";
+            String message = "비밀번호 찾기를 위한 링크입니다.<br>아래 링크로 접속하면 비밀번호가 초기화됩니다.";
+            MimeMessage mail = mailService.createHTMLMailMessage(title, message, username);
+            mailService.sendEmail(mail);
+        } catch (MessagingException e) {
+            log.error("failed to send email for find password, to={}", username);
+            throw new InternalServerException("FAILED TO SEND MAIL");
+        }
     }
 
     private void encryptUser(User user) {
